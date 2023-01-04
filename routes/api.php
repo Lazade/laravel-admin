@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\API\V1\LoginController;
 use App\Http\Controllers\API\V1\UserController;
 
 /*
@@ -17,6 +18,7 @@ use App\Http\Controllers\API\V1\UserController;
 */
 
 Route::prefix('v1')->group(function() {
+    Route::post('/login', [LoginController::class, 'authenticate']);
     Route::get('/users', [UserController::class, 'list']);
     Route::get('/user/{id}', [UserController::class, 'user']);
     Route::post('/users', [UserController::class, 'create']);

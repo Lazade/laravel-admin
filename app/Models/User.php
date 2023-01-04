@@ -14,9 +14,9 @@ class User extends Authenticatable
 
     protected $primaryKey = 'id';
 
-    public $incrementing = true;
-
     protected $keyType = 'int';
+
+    public $incrementing = true;
 
     public $timestamps = true;
 
@@ -49,4 +49,34 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public static function createRules($merge=[]) {
+        return array_merge(
+            [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:6'
+            ], $merge
+        );
+    }
+
+    public static function updateRules($id, $merge=[]) {
+        return array_merge(
+            [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email,'.$id,
+                'password' => 'required|string|min:6'
+            ], $merge
+        );
+    }
+
+    public static function rulesMsg($merge=[]) {
+        return array_merge(
+            [
+                'required' => 'The :attribute field is required.',
+                'unique' => 'The :attribute existed',
+                'min' => 'The :attribute should be longer than 6'
+            ], $merge
+        );
+    }
 }

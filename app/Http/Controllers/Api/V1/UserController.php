@@ -49,14 +49,7 @@ class UserController extends BaseController {
    * @return JSON
    */
   protected function create(Request $request) {
-    $validator = Validator::make($request->all(), [
-      'name' => 'required|string|max:255',
-      'email' => 'required|string|email|max:255|unique:users',
-      'password' => 'required|string|min:6'
-    ], [
-      'required' => 'The :attribute field is required.',
-      'unique' => 'The :attribute existed'
-    ]);
+    $validator = Validator::make($request->all(), User::createRules(), User::rulesMsg());
     if ($validator->fails()) {
       $errors = $validator->errors();
       $response = [
@@ -87,42 +80,39 @@ class UserController extends BaseController {
   }
 
   protected function update($id, Request $request) {
+    $user;
+    $validator = Validator::make($request->all(), User::updateRules($id), User::rulesMsg());
+    if ($validator->fails()) {
+      $errors = $validator->errors();
+      $response = [
+        'error' => true,
+        'msg' => $errors
+      ];
+      return response()->json($response);
+    }
     try {
       $user = User::where('id', $id)->firstOrFail();
-      $validator = Validator::make($request->all(), [
-        'name' => 'string|max:255',
-        'email' => 'string|email|max:255|unique:users',
-        'password' => 'string|min:6'
-      ], [
-        'unique' => 'The :attribute existed',
-        'min' => 'The :attribute must be more than 6'
-      ]);
-      if ($validator->fails()) {
-        $errors = $validator->errors();
-        $response = [
-          'error' => true,
-          'msg' => $errors
-        ];
-        return response()->json($response);
-      }
-      $validated = $validator->validated();
-      try {
-        $updatedUser = $user->update($validated);
-        $response = [
-          'data' => $response
-        ];
-        return response()->json($response);
-      } catch (\Throwable $th) {
-        $response = [
-          'error' => true,
-          'msg' => $th
-        ];
-        return response()->json($response);
-      }
     } catch (\Throwable $th) {
       $response = [
         'error' => true,
         'msg' => 'Could not find User with id{'.$id.'}'
+      ];
+      return response()->json($response);
+    }
+    $validated = $validator->validated();
+    $user->name = $validated['name'];
+    $user->email = $validated['email'];
+    $user->password = Hash::make($validated['password']);
+    try {
+      $result = $user->save();
+      $response = [
+        'data' => $result
+      ];
+      return response()->json($response);
+    } catch (\Throwable $th) {
+      $response = [
+        'error' => true,
+        'msg' => $th
       ];
       return response()->json($response);
     }
